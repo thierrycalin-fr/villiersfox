@@ -28,3 +28,4 @@ progress{width:100%;height:1.2rem}dialog{max-width:32rem;border-radius:18px;bord
 .av{width:4rem;height:4rem;border-radius:50%;background:var(--p);color:#fff;display:grid;place-items:center;font-weight:700;font-size:1.3rem}
 table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--b);padding:.5rem;text-align:left}
 footer{text-align:center;padding:2rem 1rem}
+.tools button{background:#fff;color:#1f4d3a;border-color:#fff}
