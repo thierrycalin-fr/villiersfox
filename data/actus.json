@@ -1,0 +1,4 @@
+{"actus":[
+{"id":1,"titre":"Exemple : travaux de voirie","date":"2026-10-01","excerpt":"Résumé court de l’actualité.","body":"Texte complet de l’actualité. [À COMPLÉTER]","photo":"","categorie":"Travaux"},
+{"id":2,"titre":"Exemple : rentrée scolaire","date":"2026-09-02","excerpt":"Résumé court.","body":"[À COMPLÉTER]","photo":"","categorie":"École"},
+{"id":3,"titre":"Exemple : repas des aînés","date":"2026-08-20","excerpt":"Résumé court.","body":"[À COMPLÉTER]","photo":"","categorie":"Événements"}]}
