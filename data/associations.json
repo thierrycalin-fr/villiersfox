@@ -1,3 +1,4 @@
 {"associations":[
-{"nom":"Exemple : Comité des fêtes","president":"Prénom NOM","contact":"Via la mairie","description":"Organise les fêtes du village.","site":"","categorie":"Culture"},
-{"nom":"Exemple : Club de marche","president":"Prénom NOM","contact":"Via la mairie","description":"Randonnées hebdomadaires.","site":"","categorie":"Sport"}]}
+{"nom":"Comité des fêtes de Villiersfox ","president":"André PETIT","contact":"Via la mairie","description":"Organise la fête du village, le repas des aînés et le feu d'artifice.","site":"","categorie":"Culture"},
+{"nom":"Les Marcheurs du Fox ","president":"Laurent LERICHE NOM","contact":"Via la mairie","description":"Randonnées conviviales chaque semaine autour de la commune.","site":"","categorie":"Sport"},
+{"nom":"Entraide Villiersfox ","president":"Sanae BENCHOAIB NOM","contact":"Via la mairie","description":"Aide aux personnes isolées : visites, courses, covoiturage.","site":"","categorie":"Social"}]}
