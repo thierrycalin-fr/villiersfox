@@ -34,3 +34,22 @@ header h1{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-siz
 .tools button{background:#fff;color:#1f4d3a;border-color:#fff}
 .card{transition:transform .15s}.card:hover{transform:translateY(-2px)}
 main{max-width:70rem}
+
+header{background:linear-gradient(rgba(20,50,38,.78),rgba(20,50,38,.88)),url(../img/hero.webp) center/cover no-repeat,#1f4d3a;color:#fff;padding:2rem 1rem 1rem}
+.dark header,.contrast.dark header{color:#fff}
+.hero{max-width:70rem;margin:0 auto 1.2rem}
+.kicker{display:inline-block;border:2px solid #fff;border-radius:999px;padding:.2rem .9rem;margin:0 0 .8rem;font-weight:700;letter-spacing:.04em}
+header h1{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-size:clamp(2.4rem,8vw,4rem);line-height:1.1}
+header h1 em{display:block;color:#a8e6c3}
+.hero .btn{background:#fff;color:#1f4d3a;border-color:#fff;font-weight:700}
+.hero .btn.alt{background:transparent;color:#fff}
+header nav,header .tools{max-width:70rem;margin-left:auto;margin-right:auto}
+nav a[aria-current]{background:#fff;color:#1f4d3a}
+.tools button{background:#fff;color:#1f4d3a;border-color:#fff}
+main{max-width:72rem}
+.cols{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));align-items:start}
+.cols .card{margin-bottom:1rem}
+.sec{font-size:1rem;text-transform:uppercase;letter-spacing:.06em;color:var(--p);border-bottom:2px solid var(--a);padding-bottom:.4rem}
+.accent{border-left:6px solid var(--p)}
+.card{transition:transform .15s}.card:hover{transform:translateY(-2px)}
+@media(prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}
