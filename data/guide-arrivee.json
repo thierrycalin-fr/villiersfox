@@ -1,0 +1,11 @@
+{"etapes":[
+{"titre":"Dès l’arrivée","items":[
+{"id":"adr","ico":"🏠","titre":"Changer d’adresse","texte":"Une seule démarche en ligne prévient les administrations.","liens":[{"l":"Service public","u":"https://www.service-public.fr/particuliers/vosdroits/R11193"}]},
+{"id":"cpt","ico":"💡","titre":"Ouvrir les compteurs","texte":"Électricité, eau, gaz : contactez vos fournisseurs.","liens":[]}]},
+{"titre":"Dans le premier mois","items":[
+{"id":"ecole","ico":"🎒","titre":"Inscription scolaire","texte":"Rendez-vous en mairie avec livret de famille et justificatif de domicile.","liens":[{"l":"Horaires de la mairie","u":"#horaires"}]},
+{"id":"med","ico":"🩺","titre":"Choisir un médecin traitant","texte":"[À COMPLÉTER]","liens":[]}]},
+{"titre":"Bien vivre ici","items":[
+{"id":"asso","ico":"🤝","titre":"Découvrir les associations","texte":"Sport, culture, entraide.","liens":[{"l":"Annuaire","u":"#assos"}]}]},
+{"titre":"Rester informé","items":[
+{"id":"inf","ico":"📰","titre":"Suivre l’actualité et l’agenda","texte":"Installez ce site comme application.","liens":[{"l":"Actualités","u":"#actus"},{"l":"Agenda","u":"#agenda"}]}]}]}
