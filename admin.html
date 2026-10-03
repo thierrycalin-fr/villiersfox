@@ -1,0 +1,47 @@
+<!-- admin.html -->
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Administration – Villiersfox</title><link rel="stylesheet" href="css/style.css"></head><body>
+<header><h1>Administration</h1><p>Villiersfox – accès réservé</p></header>
+<main id="m"></main>
+<script>
+const HASH="";
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sha=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)))].map(b=>b.toString(16).padStart(2,'0')).join('');
+const DS={
+actus:{t:'Actualités',root:'actus',f:[['titre','Titre'],['date','Date','date'],['categorie','Catégorie','select',['Travaux','École','Événements','Vie locale','Alerte']],['excerpt','Résumé court','textarea'],['body','Texte complet','textarea'],['photo','Photo : adresse du fichier, ex. img/mairie.webp (facultatif)']]},
+agenda:{t:'Agenda',root:null,f:[['titre','Titre'],['date','Date','date'],['debut','Heure de début','time'],['lieu','Lieu'],['description','Description','textarea']]},
+elus:{t:'Élus',root:'elus',f:[['prenom','Prénom'],['nom','Nom'],['rang','Rang','select',['maire','adjoint','conseiller']],['fonction','Fonction'],['pole','Pôle (facultatif)'],['mandats','Mandats'],['bio','Biographie','textarea']]}};
+const K=Object.keys(DS),data={},mod={};let cur='actus',idx=-1;
+async function ld(k){if(!data[k]){const j=await(await fetch('data/'+k+'.json',{cache:'no-store'})).json();data[k]=DS[k].root?j[DS[k].root]:j}return data[k]}
+const ok=()=>{try{return sessionStorage.getItem('adm')=='1'}catch{return false}};
+function login(){
+if(!HASH){$('#m').innerHTML=`<div class="card"><h2>Première utilisation : choisir un mot de passe</h2><p>Choisissez un mot de passe d’au moins 8 caractères. Le site affichera une ligne à copier dans ce fichier.</p><label for="pw">Mot de passe</label><input id="pw" type="password" minlength="8"><p><button id="mk">Créer</button></p><pre id="out" style="white-space:pre-wrap;word-break:break-all"></pre></div>`;
+$('#mk').onclick=async()=>{const p=$('#pw').value;if(p.length<8)return alert('8 caractères minimum.');$('#out').textContent='Dans admin.html, remplacez la ligne  const HASH="";  par :\nconst HASH="'+await sha(p)+'";'};return}
+$('#m').innerHTML=`<form id="lg" class="card"><label for="pw">Mot de passe</label><input id="pw" type="password" autocomplete="current-password"><p><button>Entrer</button></p><p id="er" role="alert"></p></form>`;
+$('#lg').onsubmit=async e=>{e.preventDefault();if(await sha($('#pw').value)==HASH){try{sessionStorage.setItem('adm','1')}catch{}draw()}else $('#er').textContent='Mot de passe incorrect.'}}
+function frm(d,o){return d.f.map(([k,l,t,opt])=>{const v=o[k]??'',id='f_'+k;
+if(t=='textarea')return`<label for="${id}">${l}</label><textarea id="${id}" rows="4">${esc(v)}</textarea>`;
+if(t=='select')return`<label for="${id}">${l}</label><select id="${id}">${opt.map(x=>`<option${x==v?' selected':''}>${x}</option>`).join('')}</select>`;
+return`<label for="${id}">${l}</label><input id="${id}" type="${t||'text'}" value="${esc(v)}">`}).join('')}
+const val=d=>Object.fromEntries(d.f.map(([k])=>[k,$('#f_'+k).value.trim()]));
+function pv(o){return`<article class="card"><h3>${esc(o.titre||((o.prenom||'')+' '+(o.nom||'')))}</h3><p><small>${esc(o.date||o.fonction||'')} ${esc(o.categorie||o.debut||'')} ${esc(o.lieu||'')}</small></p><p>${esc(o.excerpt||o.description||o.bio||'')}</p>${o.body?`<p>${esc(o.body)}</p>`:''}</article>`}
+async function draw(){if(!ok())return login();
+await Promise.all(K.map(ld));const d=DS[cur],a=data[cur],o=a[idx]||{},nx=data.agenda.filter(e=>e.date>=new Date().toISOString().slice(0,10)).sort((x,y)=>x.date.localeCompare(y.date))[0];
+$('#m').innerHTML=`<section class="card"><h2>Tableau de bord</h2><p>${K.map(k=>DS[k].t+' : <strong>'+data[k].length+'</strong>').join(' · ')}<br>Prochain événement : ${nx?esc(nx.titre)+' ('+esc(nx.date)+')':'aucun'}</p><small>Le site n’utilise aucun traceur : il n’y a donc pas de statistiques de fréquentation.</small></section>
+<nav style="margin:1rem 0">${K.map(k=>`<button class="${k==cur?'':'alt'}" data-t="${k}">${DS[k].t}${mod[k]?' *':''}</button>`).join(' ')}</nav>
+<div class="grid"><section class="card"><h2>${d.t} (${a.length})</h2>${a.map((x,i)=>`<p><button class="alt" data-ed="${i}">${esc(x.titre||x.prenom+' '+x.nom)}</button> <button class="alt" data-del="${i}">Supprimer</button></p>`).join('')||'<p>Aucun élément.</p>'}<p><button data-new>Ajouter</button></p></section>
+<section class="card"><h2>${idx<0?'Nouvel élément':'Modifier'}</h2>${cur=='elus'?'<p><small>Ne saisissez aucune coordonnée personnelle : le contact passe par la mairie. L’élu doit avoir donné son accord.</small></p>':''}<div id="fm">${frm(d,o)}</div><p><button data-save>Enregistrer</button></p></section></div>
+<section class="card"><h2>Aperçu</h2><div id="pv">${pv(o)}</div></section>
+<section class="card"><h2>Publier</h2><p>${mod[cur]?'Modifications non publiées sur ',cur:'Aucune modification sur '} <strong>${cur}.json</strong>.</p><p><button data-exp>Télécharger ${cur}.json</button> <button class="alt" data-out>Se déconnecter</button></p></section>`}
+document.addEventListener('input',e=>{if(e.target.id?.startsWith('f_'))$('#pv').innerHTML=pv(val(DS[cur]))});
+document.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const a=data[cur],d=DS[cur];
+if(b.dataset.t){cur=b.dataset.t;idx=-1;draw()}
+if(b.dataset.ed!=null){idx=+b.dataset.ed;draw()}
+if('new'in b.dataset){idx=-1;draw()}
+if(b.dataset.del!=null&&confirm('Supprimer cet élément ?')){a.splice(+b.dataset.del,1);mod[cur]=1;idx=-1;draw()}
+if('save'in b.dataset){const v=val(d);if(!v.titre&&!v.nom)return alert('Titre ou nom obligatoire.');
+if(idx>=0)Object.assign(a[idx],v);else{if(cur=='actus')v.id=Math.max(0,...a.map(x=>+x.id||0))+1;if(cur=='agenda')v.id='e'+Date.now();if(cur=='elus'){v.contact_mairie='Via la mairie'}a.push(v);idx=a.length-1}
+mod[cur]=1;draw()}
+if('exp'in b.dataset){const j=JSON.stringify(d.root?{[d.root]:a}:a,null,1),l=document.createElement('a');l.href=URL.createObjectURL(new Blob([j],{type:'application/json'}));l.download=cur+'.json';l.click()}
+if('out'in b.dataset){try{sessionStorage.removeItem('adm')}catch{}login()}});
+draw();
+</script></body></html>
