@@ -1,0 +1,77 @@
+// js/app.js
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const J=async f=>(await fetch('data/'+f+'.json')).json();
+const D=d=>new Date(d+'T12:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+const st={get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+const at=i=>{const d=new Date(Date.now()+i*864e5);return{date:d.toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}),day:d.toLocaleDateString('fr-FR',{timeZone:'Europe/Paris',weekday:'long'})}};
+const T=at(0).date,mm=h=>{const[a,b]=h.split(':');return a*60+ +b};
+const NAV=[['accueil','Accueil','🏠'],['actus','Actualités','📰'],['agenda','Agenda','📅'],['elus','Élus','🏛️'],['guide','Nouveaux habitants','📦'],['horaires','Horaires','🕘'],['assos','Associations','🤝'],['contact','Contact','✉️'],['signaler','Signaler','📣'],['meteo','Météo','⛅']];
+let ELUS=[];
+async function feries(){const c=st.get('feries',null);if(c&&c.d===T)return c.v;try{const v=await(await fetch('https://calendrier.api.gouv.fr/jours-feries/metropole.json')).json();st.set('feries',{d:T,v});return v}catch{return c?.v||{}}}
+async function statut(m){const f=await feries(),now=new Date().toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}),n=mm(now);
+const closed=d=>f[d]?'Jour férié : '+f[d]:(m.fermetures||[]).find(x=>d>=x.du&&d<=x.au)?.motif;
+const x=at(0),why=closed(x.date),open=!why&&(m.horaires[x.day]||[]).some(([a,b])=>n>=mm(a)&&n<mm(b));let next='';
+for(let i=0;i<15&&!next;i++){const y=at(i);if(closed(y.date))continue;const s=(m.horaires[y.day]||[]).find(([a])=>i>0||mm(a)>n);if(s)next=(i?y.day+' ':'aujourd’hui ')+'à '+s[0]}
+return{open,why,next,ferie:f[T]}}
+const stHtml=s=>`<p class="${s.open?'ok':'ko'}">${s.open?'Mairie ouverte maintenant':'Mairie fermée'}${s.why?' ('+esc(s.why)+')':''}</p>${s.open?'':'<p>Prochaine ouverture : '+esc(s.next||'à venir')+'</p>'}`;
+const WM=c=>c==0?'☀️':c<4?'⛅':c<50?'🌫️':c<70?'🌧️':c<80?'❄️':c<95?'🌦️':'⛈️';
+async function meteo(m){if(!(+m.lat&&+m.lon))return'<p>Météo indisponible : coordonnées GPS à compléter dans <code>data/mairie.json</code>.</p>';
+let c=st.get('meteo',null);if(!c||Date.now()-c.t>9e5){const v=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${m.lat}&longitude=${m.lon}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe%2FParis&forecast_days=3`)).json();c={t:Date.now(),v};st.set('meteo',c)}
+const v=c.v;return`<p style="font-size:2rem">${WM(v.current.weather_code)} ${Math.round(v.current.temperature_2m)} °C</p><ul>${v.daily.time.map((d,i)=>`<li>${new Date(d+'T12:00').toLocaleDateString('fr-FR',{weekday:'long'})} ${WM(v.daily.weather_code[i])} ${Math.round(v.daily.temperature_2m_min[i])}° / ${Math.round(v.daily.temperature_2m_max[i])}°</li>`).join('')}</ul>`}
+const ics=e=>'data:text/calendar;charset=utf-8,'+encodeURIComponent(['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Villiersfox//FR','BEGIN:VEVENT','UID:'+e.id+'@villiersfox','DTSTAMP:'+new Date().toISOString().replace(/[-:]|\.\d+/g,''),'DTSTART;TZID=Europe/Paris:'+e.date.replace(/-/g,'')+'T'+(e.debut||'00:00').replace(':','')+'00','SUMMARY:'+e.titre,'LOCATION:'+e.lieu,'DESCRIPTION:'+e.description,'END:VEVENT','END:VCALENDAR'].join('\r\n'));
+const newsCard=a=>`<article class="card"><span class="tag">${esc(a.categorie)}</span><h3>${esc(a.titre)}</h3><p><small>${D(a.date.slice(0,10))}</small></p>${a.photo?`<img src="${esc(a.photo)}" alt="" loading="lazy" style="max-width:100%;border-radius:12px">`:''}<p>${esc(a.excerpt)}</p><details><summary>Lire la suite</summary><p>${esc(a.body)}</p></details><a class="btn alt" href="mailto:?subject=${encodeURIComponent(a.titre)}&body=${encodeURIComponent(a.excerpt+' — '+location.origin)}">Partager</a></article>`;
+const evCard=e=>`<article class="card ${e.date<T?'past':''}" data-m="${e.date.slice(0,7)}"><h3>${esc(e.titre)}</h3><p>${D(e.date)} à ${esc(e.debut)}<br>${esc(e.lieu)}</p><p>${esc(e.description)}</p>${e.date<T?'<p>Événement passé</p>':`<a class="btn alt" download="evenement.ics" href="${ics(e)}">Ajouter à mon calendrier</a>`}</article>`;
+const V={
+async accueil(){const[a,g,m]=await Promise.all([J('actus'),J('agenda'),J('mairie')]),s=await statut(m),n=g.filter(e=>e.date>=T).sort((x,y)=>x.date.localeCompare(y.date))[0];
+return`<div class="cols"><div><h2 class="sec">La mairie au quotidien</h2><section class="card"><h3>Mairie</h3>${stHtml(s)}<p>${esc(m.adresse)}<br>${esc(m.tel)}</p><a class="btn alt" href="#horaires">Horaires</a> <a class="btn alt" href="#contact">Écrire</a></section><section class="card"><h3>Météo</h3>${await meteo(m).catch(()=>'<p>Météo indisponible.</p>')}</section></div>
+<div><h2 class="sec">Vous aider et participer</h2><section class="card accent"><h3>🏡 Je viens d’emménager</h3><p>Démarches à cocher, même hors connexion.</p><a class="btn" href="#guide">Ouvrir le guide</a></section><section class="card"><h3>🤝 Associations</h3><p>Sport, culture, entraide.</p><a class="btn alt" href="#assos">Voir l’annuaire</a></section><section class="card"><h3>📣 Signaler un problème</h3><p>Voirie, éclairage, propreté.</p><a class="btn alt" href="#signaler">Signaler</a></section></div>
+<div><h2 class="sec">Actualités et agenda</h2><section class="card"><h3>Prochaine manifestation</h3>${n?`<strong>${esc(n.titre)}</strong><p>${D(n.date)}<br>${esc(n.lieu)}</p>`:'<p>Aucune manifestation à venir.</p>'}<a class="btn alt" href="#agenda">Agenda</a></section>${a.actus.sort((x,y)=>y.date.localeCompare(x.date)).slice(0,3).map(newsCard).join('')}<p><a class="btn" href="#actus">Toutes les actualités</a></p></div></div>`},
+async actus(){const a=await J('actus');return`<h2>Actualités</h2><div class="grid">${a.actus.sort((x,y)=>y.date.localeCompare(x.date)).map(newsCard).join('')}</div>`},
+async agenda(){const g=(await J('agenda')).sort((a,b)=>a.date.localeCompare(b.date)),ms=[...new Set(g.map(e=>e.date.slice(0,7)))];
+return`<h2>Agenda</h2><label for="mois">Filtrer par mois</label><select id="mois"><option value="">Tous</option>${ms.map(x=>`<option value="${x}">${new Date(x+'-15').toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</option>`).join('')}</select><div class="grid" style="margin-top:1rem">${g.map(evCard).join('')}</div>`},
+async elus(){ELUS=(await J('elus')).elus;const o={maire:0,adjoint:1,conseiller:2};ELUS.sort((a,b)=>o[a.rang]-o[b.rang]);
+return`<h2>Vos élus</h2><div class="grid">${ELUS.map((e,i)=>`<button class="card alt" data-e="${i}" style="text-align:left;color:var(--t)"><div class="av" aria-hidden="true">${esc(e.prenom[0]+e.nom[0])}</div><h3>${esc(e.prenom+' '+e.nom)}</h3>${esc(e.fonction)}</button>`).join('')}</div>`},
+async guide(){const g=await J('guide-arrivee'),k=st.get('guide',{}),lk=l=>`<a href="${esc(l.u)}"${/^https?:/.test(l.u)?' target="_blank" rel="noopener"':''}>${esc(l.l)}</a>`;
+return`<h2>Je viens d’emménager</h2><p>Cochez les démarches au fur et à mesure. Rien n’est envoyé : votre progression reste sur votre appareil.</p><progress id="pg" max="1" value="0" aria-label="Progression"></progress><p id="pgt"></p><button class="alt" id="reset">Tout décocher</button>
+${g.etapes.map((e,ei)=>`<section class="card" style="margin:1rem 0"><h3>${esc(e.titre)}</h3>${e.items.map(i=>{const key=ei+':'+i.id;return`<div class="chk"><input type="checkbox" id="c${ei}${i.id}" data-k="${key}" ${k[key]?'checked':''}><label for="c${ei}${i.id}"><strong>${esc(i.ico)} ${esc(i.titre)}</strong><br>${esc(i.texte)}<br>${(i.liens||[]).map(lk).join(' · ')}</label></div>`}).join('')}</section>`).join('')}`},
+async horaires(){const m=await J('mairie'),s=await statut(m),j=['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+return`<h2>Horaires de la mairie</h2>${stHtml(s)}<table><tbody>${j.map(d=>`<tr><th>${d}</th><td>${(m.horaires[d]||[]).map(([a,b])=>a+' – '+b).join(' et ')||'Fermé'}</td></tr>`).join('')}</tbody></table>${(m.fermetures||[]).map(f=>`<p>Fermeture : ${D(f.du)} au ${D(f.au)} (${esc(f.motif)})</p>`).join('')}`},
+async assos(){const a=(await J('associations')).associations,c=[...new Set(a.map(x=>x.categorie))];
+return`<h2>Associations</h2><label for="q">Rechercher</label><input id="q" type="search"><label for="cat">Catégorie</label><select id="cat"><option value="">Toutes</option>${c.map(x=>`<option>${esc(x)}</option>`).join('')}</select><div class="grid" style="margin-top:1rem">${a.map(x=>`<article class="card" data-c="${esc(x.categorie)}" data-t="${esc((x.nom+x.description).toLowerCase())}"><h3>${esc(x.nom)}</h3><p>${esc(x.description)}</p><p>Président(e) : ${esc(x.president)}<br>Contact : via la mairie</p>${x.site&&x.site[0]=='h'?`<a href="${esc(x.site)}" target="_blank" rel="noopener">Site web</a>`:''}</article>`).join('')}</div>`},
+async contact(){return`<h2>Contact</h2><form id="fc" class="card"><label for="n">Nom</label><input id="n" required><label for="e">E-mail</label><input id="e" type="email" required><label for="s">Sujet</label><input id="s" required><label for="m">Message</label><textarea id="m" rows="6" required></textarea><input class="hp" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true"><p><button>Envoyer</button></p><p id="ok" role="status"></p><small>RGPD : votre message est envoyé depuis votre messagerie à la mairie, qui l’utilise uniquement pour vous répondre. Aucune donnée n’est stockée sur ce site.</small></form>`},
+async signaler(){return`<h2>Signaler un problème</h2><form id="fs" class="card"><label for="t">Type</label><select id="t"><option>Voirie</option><option>Éclairage</option><option>Propreté</option><option>Espaces verts</option><option>Autre</option></select><label for="l">Lieu (rue, quartier)</label><input id="l" required><p><button type="button" class="alt" id="geo">Utiliser ma position</button></p><label for="d">Description</label><textarea id="d" rows="5" required></textarea><p>Pour joindre une photo, ajoutez-la dans le message e-mail qui s’ouvrira.</p><input class="hp" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true"><p><button>Envoyer le signalement</button></p><p id="ok" role="status"></p><small>RGPD : aucune donnée nominative n’est stockée sur ce site.</small></form>`},
+async meteo(){const m=await J('mairie');return`<h2>Météo locale</h2><div class="card">${await meteo(m).catch(()=>'<p>Météo indisponible.</p>')}</div>`},
+async legal(){return`<h2>Mentions légales</h2><p>Éditeur : Mairie de Villiersfox, [À COMPLÉTER : adresse]. Responsable de publication : [À COMPLÉTER : nom du maire]. Hébergeur : Netlify, Inc., 512 2nd Street, San Francisco, CA 94107, États-Unis. Droit d’accès, de rectification et d’effacement : contactez la mairie.</p>`},
+async privacy(){return`<h2>Vie privée et accessibilité</h2><p>Ce site n’utilise ni cookie, ni outil de mesure d’audience, ni traceur. Vos réglages d’accessibilité et la progression du guide sont stockés uniquement dans votre navigateur. Services appelés : Open-Meteo (météo, sans donnée personnelle) et calendrier.api.gouv.fr (jours fériés). Les formulaires passent par votre messagerie (mailto). Hébergement : Netlify (États-Unis).</p><p><strong>Déclaration d’accessibilité (RGAA) :</strong> site en cours de mise en conformité, objectif WCAG AA. Signalez toute difficulté à la mairie. [À COMPLÉTER : date de l’audit]</p>`}};
+function prog(){const c=[...document.querySelectorAll('[data-k]')];if(!$('#pg'))return;const n=c.filter(x=>x.checked).length;$('#pg').value=c.length?n/c.length:0;$('#pgt').textContent=n+' démarche(s) sur '+c.length}
+async function go(){const r=location.hash.slice(1)||'accueil',f=V[r]||V.accueil;$('#nav').innerHTML=NAV.map(([h,l,i])=>`<a href="#${h}"${h==r?' aria-current="page"':''}><span aria-hidden="true">${i}</span> ${l}</a>`).join('');
+try{$('#main').innerHTML=await f()}catch{$('#main').innerHTML='<p>Contenu momentanément indisponible.</p>'}prog();$('#main').focus();scrollTo(0,0);
+J('mairie').then(statut).then(s=>{$('#banner').textContent=s.ferie?'Jour férié aujourd’hui : '+s.ferie+'. La mairie est fermée.':''}).catch(()=>{})}
+addEventListener('hashchange',go);go();
+document.addEventListener('input',e=>{const t=e.target;
+if(t.id=='mois')document.querySelectorAll('[data-m]').forEach(x=>x.hidden=t.value&&x.dataset.m!=t.value);
+if(t.id=='q'||t.id=='cat')document.querySelectorAll('[data-t]').forEach(x=>x.hidden=!(x.dataset.t.includes($('#q').value.toLowerCase())&&(!$('#cat').value||x.dataset.c==$('#cat').value)));
+if(t.dataset.k){const g=st.get('guide',{});g[t.dataset.k]=t.checked;st.set('guide',g);prog()}});
+document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+if(t.dataset.e){const x=ELUS[t.dataset.e],d=$('#dlg');d.textContent='';
+const add=(tag,txt)=>{const n=document.createElement(tag);n.textContent=txt;d.appendChild(n);return n};
+add('h3',x.prenom+' '+x.nom);add('p',x.fonction+' · '+x.mandats);add('p',x.bio);add('p','Contact : '+x.contact_mairie);
+add('button','Fermer').id='close';d.showModal()}
+if(t.id=='close')$('#dlg').close();
+if(t.id=='reset'){st.set('guide',{});go()}
+if(t.id=='geo')navigator.geolocation?.getCurrentPosition(p=>{$('#l').value=p.coords.latitude.toFixed(5)+', '+p.coords.longitude.toFixed(5)},()=>alert('Position indisponible : saisissez le lieu à la main.'))});
+document.addEventListener('submit',async e=>{e.preventDefault();if($('#hp').value)return;const m=await J('mairie');let s,b;
+if(e.target.id=='fc'){s=$('#s').value;b=$('#m').value+'\n\n'+$('#n').value+' — '+$('#e').value}
+else{const no='SIG-'+new Date().getFullYear()+'-'+String(Math.floor(Math.random()*900)+100);s=no+' – '+$('#t').value;b='Lieu : '+$('#l').value+'\n\n'+$('#d').value;$('#ok').textContent='Votre numéro de suivi : '+no}
+if(e.target.id=='fc')$('#ok').textContent='Votre messagerie va s’ouvrir : merci de valider l’envoi.';
+location.href='mailto:'+m.email+'?subject='+encodeURIComponent(s)+'&body='+encodeURIComponent(b)});
+const P=st.get('a11y',{s:0});
+function applyA(){document.documentElement.className='s'+P.s;['contrast','cb','dark','lines','big'].forEach(o=>document.body.classList.toggle(o,!!P[o]));document.documentElement.classList.toggle('dark',!!P.dark);document.documentElement.classList.toggle('contrast',!!P.contrast);document.documentElement.classList.toggle('cb',!!P.cb);document.querySelectorAll('[data-o]').forEach(c=>c.checked=!!P[c.dataset.o])}
+applyA();
+$('#abtn').onclick=()=>{const h=$('#a11y').hidden;$('#a11y').hidden=!h;$('#abtn').setAttribute('aria-expanded',h)};
+$('#a11y').addEventListener('click',e=>{if(e.target.dataset.s!=null){P.s=+e.target.dataset.s;st.set('a11y',P);applyA()}});
+$('#a11y').addEventListener('change',e=>{if(e.target.dataset.o){P[e.target.dataset.o]=e.target.checked;st.set('a11y',P);applyA()}});
+$('#tts').onclick=()=>{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance($('#main').innerText);u.lang='fr-FR';speechSynthesis.speak(u)};
+let ip;addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;$('#install').hidden=false});
+$('#install').onclick=async()=>{ip.prompt();await ip.userChoice;$('#install').hidden=true};
+if('serviceWorker'in navigator)navigator.serviceWorker.register('/service-worker.js');
