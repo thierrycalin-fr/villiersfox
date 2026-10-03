@@ -3,7 +3,7 @@
 <header><h1>Administration</h1><p>Villiersfox – accès réservé</p></header>
 <main id="m"></main>
 <script>
-const HASH="";
+const HASH="262d18e168d250961be03d741aefdf86bd9311b16e3bbe6991462fbf403d0715";
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const sha=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)))].map(b=>b.toString(16).padStart(2,'0')).join('');
 const DS={
