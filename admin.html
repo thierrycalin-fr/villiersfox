@@ -31,7 +31,7 @@ $('#m').innerHTML=`<section class="card"><h2>Tableau de bord</h2><p>${K.map(k=>D
 <div class="grid"><section class="card"><h2>${d.t} (${a.length})</h2>${a.map((x,i)=>`<p><button class="alt" data-ed="${i}">${esc(x.titre||x.prenom+' '+x.nom)}</button> <button class="alt" data-del="${i}">Supprimer</button></p>`).join('')||'<p>Aucun élément.</p>'}<p><button data-new>Ajouter</button></p></section>
 <section class="card"><h2>${idx<0?'Nouvel élément':'Modifier'}</h2>${cur=='elus'?'<p><small>Ne saisissez aucune coordonnée personnelle : le contact passe par la mairie. L’élu doit avoir donné son accord.</small></p>':''}<div id="fm">${frm(d,o)}</div><p><button data-save>Enregistrer</button></p></section></div>
 <section class="card"><h2>Aperçu</h2><div id="pv">${pv(o)}</div></section>
-<section class="card"><h2>Publier</h2><p>${mod[cur]?'Modifications non publiées sur ',cur:'Aucune modification sur '} <strong>${cur}.json</strong>.</p><p><button data-exp>Télécharger ${cur}.json</button> <button class="alt" data-out>Se déconnecter</button></p></section>`}
+<section class="card"><h2>Publier</h2><p>${mod[cur]?'Modifications non publiées sur ':'Aucune modification sur '}.</p><p><button data-exp>Télécharger ${cur}.json</button> <button class="alt" data-out>Se déconnecter</button></p></section>`}
 document.addEventListener('input',e=>{if(e.target.id?.startsWith('f_'))$('#pv').innerHTML=pv(val(DS[cur]))});
 document.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const a=data[cur],d=DS[cur];
 if(b.dataset.t){cur=b.dataset.t;idx=-1;draw()}
