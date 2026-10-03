@@ -53,7 +53,11 @@ if(t.id=='mois')document.querySelectorAll('[data-m]').forEach(x=>x.hidden=t.valu
 if(t.id=='q'||t.id=='cat')document.querySelectorAll('[data-t]').forEach(x=>x.hidden=!(x.dataset.t.includes($('#q').value.toLowerCase())&&(!$('#cat').value||x.dataset.c==$('#cat').value)));
 if(t.dataset.k){const g=st.get('guide',{});g[t.dataset.k]=t.checked;st.set('guide',g);prog()}});
 document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
-if(t.dataset.e){const x=ELUS[t.dataset.e];$('#dlg').innerHTML=`<h3>${esc(x.prenom+' '+x.nom)}</h3><p><strong>${esc(x.fonction)}</strong> · ${esc(x.mandats)}</p><p>${esc(x.bio)}</p><p>Contact : ${esc(x.contact_mairie)}</p><button onclick="this.closest('dialog').close()">Fermer</button>`;$('#dlg').showModal()}
+if(t.dataset.e){const x=ELUS[t.dataset.e],d=$('#dlg');d.textContent='';
+const add=(tag,txt)=>{const n=document.createElement(tag);n.textContent=txt;d.appendChild(n);return n};
+add('h3',x.prenom+' '+x.nom);add('p',x.fonction+' · '+x.mandats);add('p',x.bio);add('p','Contact : '+x.contact_mairie);
+add('button','Fermer').id='close';d.showModal()}
+if(t.id=='close')$('#dlg').close();
 if(t.id=='reset'){st.set('guide',{});go()}
 if(t.id=='geo')navigator.geolocation?.getCurrentPosition(p=>{$('#l').value=p.coords.latitude.toFixed(5)+', '+p.coords.longitude.toFixed(5)},()=>alert('Position indisponible : saisissez le lieu à la main.'))});
 document.addEventListener('submit',async e=>{e.preventDefault();if($('#hp').value)return;const m=await J('mairie');let s,b;
@@ -61,7 +65,6 @@ if(e.target.id=='fc'){s=$('#s').value;b=$('#m').value+'\n\n'+$('#n').value+' —
 else{const no='SIG-'+new Date().getFullYear()+'-'+String(Math.floor(Math.random()*900)+100);s=no+' – '+$('#t').value;b='Lieu : '+$('#l').value+'\n\n'+$('#d').value;$('#ok').textContent='Votre numéro de suivi : '+no}
 if(e.target.id=='fc')$('#ok').textContent='Votre messagerie va s’ouvrir : merci de valider l’envoi.';
 location.href='mailto:'+m.email+'?subject='+encodeURIComponent(s)+'&body='+encodeURIComponent(b)});
-/* Accessibilité */
 const P=st.get('a11y',{s:0});
 function applyA(){document.documentElement.className='s'+P.s;['contrast','cb','dark','lines','big'].forEach(o=>document.body.classList.toggle(o,!!P[o]));document.documentElement.classList.toggle('dark',!!P.dark);document.documentElement.classList.toggle('contrast',!!P.contrast);document.documentElement.classList.toggle('cb',!!P.cb);document.querySelectorAll('[data-o]').forEach(c=>c.checked=!!P[c.dataset.o])}
 applyA();
@@ -69,7 +72,6 @@ $('#abtn').onclick=()=>{const h=$('#a11y').hidden;$('#a11y').hidden=!h;$('#abtn'
 $('#a11y').addEventListener('click',e=>{if(e.target.dataset.s!=null){P.s=+e.target.dataset.s;st.set('a11y',P);applyA()}});
 $('#a11y').addEventListener('change',e=>{if(e.target.dataset.o){P[e.target.dataset.o]=e.target.checked;st.set('a11y',P);applyA()}});
 $('#tts').onclick=()=>{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance($('#main').innerText);u.lang='fr-FR';speechSynthesis.speak(u)};
-/* PWA */
 let ip;addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;$('#install').hidden=false});
 $('#install').onclick=async()=>{ip.prompt();await ip.userChoice;$('#install').hidden=true};
 if('serviceWorker'in navigator)navigator.serviceWorker.register('/service-worker.js');
