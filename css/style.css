@@ -34,7 +34,6 @@ header h1{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-siz
 .tools button{background:#fff;color:#1f4d3a;border-color:#fff}
 .card{transition:transform .15s}.card:hover{transform:translateY(-2px)}
 main{max-width:70rem}
-
 header{background:linear-gradient(rgba(20,50,38,.78),rgba(20,50,38,.88)),url(../img/hero.webp) center/cover no-repeat,#1f4d3a;color:#fff;padding:2rem 1rem 1rem}
 .dark header,.contrast.dark header{color:#fff}
 .hero{max-width:70rem;margin:0 auto 1.2rem}
@@ -47,6 +46,7 @@ header nav,header .tools{max-width:70rem;margin-left:auto;margin-right:auto}
 nav a[aria-current]{background:#fff;color:#1f4d3a}
 .tools button{background:#fff;color:#1f4d3a;border-color:#fff}
 main{max-width:72rem}
+main:focus{outline:none}
 .cols{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));align-items:start}
 .cols .card{margin-bottom:1rem}
 .sec{font-size:1rem;text-transform:uppercase;letter-spacing:.06em;color:var(--p);border-bottom:2px solid var(--a);padding-bottom:.4rem}
