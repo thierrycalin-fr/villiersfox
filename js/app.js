@@ -5,7 +5,7 @@ const D=d=>new Date(d+'T12:00').toLocaleDateString('fr-FR',{weekday:'long',day:'
 const st={get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 const at=i=>{const d=new Date(Date.now()+i*864e5);return{date:d.toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}),day:d.toLocaleDateString('fr-FR',{timeZone:'Europe/Paris',weekday:'long'})}};
 const T=at(0).date,mm=h=>{const[a,b]=h.split(':');return a*60+ +b};
-const NAV=[['accueil','Accueil'],['actus','Actualités'],['agenda','Agenda'],['elus','Élus'],['guide','Nouveaux habitants'],['horaires','Horaires'],['assos','Associations'],['contact','Contact'],['signaler','Signaler'],['meteo','Météo']];
+const NAV=[['accueil','Accueil','🏠'],['actus','Actualités','📰'],['agenda','Agenda','📅'],['elus','Élus','🏛️'],['guide','Nouveaux habitants','📦'],['horaires','Horaires','🕘'],['assos','Associations','🤝'],['contact','Contact','✉️'],['signaler','Signaler','📣'],['meteo','Météo','⛅']];
 let ELUS=[];
 async function feries(){const c=st.get('feries',null);if(c&&c.d===T)return c.v;try{const v=await(await fetch('https://calendrier.api.gouv.fr/jours-feries/metropole.json')).json();st.set('feries',{d:T,v});return v}catch{return c?.v||{}}}
 async function statut(m){const f=await feries(),now=new Date().toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}),n=mm(now);
@@ -23,9 +23,9 @@ const newsCard=a=>`<article class="card"><span class="tag">${esc(a.categorie)}</
 const evCard=e=>`<article class="card ${e.date<T?'past':''}" data-m="${e.date.slice(0,7)}"><h3>${esc(e.titre)}</h3><p>${D(e.date)} à ${esc(e.debut)}<br>${esc(e.lieu)}</p><p>${esc(e.description)}</p>${e.date<T?'<p>Événement passé</p>':`<a class="btn alt" download="evenement.ics" href="${ics(e)}">Ajouter à mon calendrier</a>`}</article>`;
 const V={
 async accueil(){const[a,g,m]=await Promise.all([J('actus'),J('agenda'),J('mairie')]),s=await statut(m),n=g.filter(e=>e.date>=T).sort((x,y)=>x.date.localeCompare(y.date))[0];
-return`<div class="grid"><section class="card"><h2>Mairie</h2>${stHtml(s)}<p>${esc(m.adresse)}<br>${esc(m.tel)}</p></section><section class="card"><h2>Prochaine manifestation</h2>${n?`<h3>${esc(n.titre)}</h3><p>${D(n.date)}<br>${esc(n.lieu)}</p>`:'<p>Aucune manifestation à venir.</p>'}</section><section class="card"><h2>Météo</h2>${await meteo(m).catch(()=>'<p>Météo indisponible.</p>')}</section></div>
-<h2>Dernières actualités</h2><div class="grid">${a.actus.sort((x,y)=>y.date.localeCompare(x.date)).slice(0,3).map(newsCard).join('')}</div><p><a class="btn" href="#actus">Toutes les actualités</a></p>
-<h2>Je viens d’emménager</h2><p><a class="btn" href="#guide">Ouvrir le guide d’arrivée</a></p>`},
+return`<div class="cols"><div><h2 class="sec">La mairie au quotidien</h2><section class="card"><h3>Mairie</h3>${stHtml(s)}<p>${esc(m.adresse)}<br>${esc(m.tel)}</p><a class="btn alt" href="#horaires">Horaires</a> <a class="btn alt" href="#contact">Écrire</a></section><section class="card"><h3>Météo</h3>${await meteo(m).catch(()=>'<p>Météo indisponible.</p>')}</section></div>
+<div><h2 class="sec">Vous aider et participer</h2><section class="card accent"><h3>🏡 Je viens d’emménager</h3><p>Démarches à cocher, même hors connexion.</p><a class="btn" href="#guide">Ouvrir le guide</a></section><section class="card"><h3>🤝 Associations</h3><p>Sport, culture, entraide.</p><a class="btn alt" href="#assos">Voir l’annuaire</a></section><section class="card"><h3>📣 Signaler un problème</h3><p>Voirie, éclairage, propreté.</p><a class="btn alt" href="#signaler">Signaler</a></section></div>
+<div><h2 class="sec">Actualités et agenda</h2><section class="card"><h3>Prochaine manifestation</h3>${n?`<strong>${esc(n.titre)}</strong><p>${D(n.date)}<br>${esc(n.lieu)}</p>`:'<p>Aucune manifestation à venir.</p>'}<a class="btn alt" href="#agenda">Agenda</a></section>${a.actus.sort((x,y)=>y.date.localeCompare(x.date)).slice(0,3).map(newsCard).join('')}<p><a class="btn" href="#actus">Toutes les actualités</a></p></div></div>`},
 async actus(){const a=await J('actus');return`<h2>Actualités</h2><div class="grid">${a.actus.sort((x,y)=>y.date.localeCompare(x.date)).map(newsCard).join('')}</div>`},
 async agenda(){const g=(await J('agenda')).sort((a,b)=>a.date.localeCompare(b.date)),ms=[...new Set(g.map(e=>e.date.slice(0,7)))];
 return`<h2>Agenda</h2><label for="mois">Filtrer par mois</label><select id="mois"><option value="">Tous</option>${ms.map(x=>`<option value="${x}">${new Date(x+'-15').toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</option>`).join('')}</select><div class="grid" style="margin-top:1rem">${g.map(evCard).join('')}</div>`},
@@ -44,7 +44,7 @@ async meteo(){const m=await J('mairie');return`<h2>Météo locale</h2><div class
 async legal(){return`<h2>Mentions légales</h2><p>Éditeur : Mairie de Villiersfox, [À COMPLÉTER : adresse]. Responsable de publication : [À COMPLÉTER : nom du maire]. Hébergeur : Netlify, Inc., 512 2nd Street, San Francisco, CA 94107, États-Unis. Droit d’accès, de rectification et d’effacement : contactez la mairie.</p>`},
 async privacy(){return`<h2>Vie privée et accessibilité</h2><p>Ce site n’utilise ni cookie, ni outil de mesure d’audience, ni traceur. Vos réglages d’accessibilité et la progression du guide sont stockés uniquement dans votre navigateur. Services appelés : Open-Meteo (météo, sans donnée personnelle) et calendrier.api.gouv.fr (jours fériés). Les formulaires passent par votre messagerie (mailto). Hébergement : Netlify (États-Unis).</p><p><strong>Déclaration d’accessibilité (RGAA) :</strong> site en cours de mise en conformité, objectif WCAG AA. Signalez toute difficulté à la mairie. [À COMPLÉTER : date de l’audit]</p>`}};
 function prog(){const c=[...document.querySelectorAll('[data-k]')];if(!$('#pg'))return;const n=c.filter(x=>x.checked).length;$('#pg').value=c.length?n/c.length:0;$('#pgt').textContent=n+' démarche(s) sur '+c.length}
-async function go(){const r=location.hash.slice(1)||'accueil',f=V[r]||V.accueil;$('#nav').innerHTML=NAV.map(([h,l])=>`<a href="#${h}"${h==r?' aria-current="page"':''}>${l}</a>`).join('');
+async function go(){const r=location.hash.slice(1)||'accueil',f=V[r]||V.accueil;$('#nav').innerHTML=NAV.map(([h,l,i])=>`<a href="#${h}"${h==r?' aria-current="page"':''}><span aria-hidden="true">${i}</span> ${l}</a>`).join('');
 try{$('#main').innerHTML=await f()}catch{$('#main').innerHTML='<p>Contenu momentanément indisponible.</p>'}prog();$('#main').focus();scrollTo(0,0);
 J('mairie').then(statut).then(s=>{$('#banner').textContent=s.ferie?'Jour férié aujourd’hui : '+s.ferie+'. La mairie est fermée.':''}).catch(()=>{})}
 addEventListener('hashchange',go);go();
@@ -53,23 +53,4 @@ if(t.id=='mois')document.querySelectorAll('[data-m]').forEach(x=>x.hidden=t.valu
 if(t.id=='q'||t.id=='cat')document.querySelectorAll('[data-t]').forEach(x=>x.hidden=!(x.dataset.t.includes($('#q').value.toLowerCase())&&(!$('#cat').value||x.dataset.c==$('#cat').value)));
 if(t.dataset.k){const g=st.get('guide',{});g[t.dataset.k]=t.checked;st.set('guide',g);prog()}});
 document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
-if(t.dataset.e){const x=ELUS[t.dataset.e];$('#dlg').innerHTML=`<h3>${esc(x.prenom+' '+x.nom)}</h3><p><strong>${esc(x.fonction)}</strong> · ${esc(x.mandats)}</p><p>${esc(x.bio)}</p><p>Contact : ${esc(x.contact_mairie)}</p><button onclick="this.closest('dialog').close()">Fermer</button>`;$('#dlg').showModal()}
-if(t.id=='reset'){st.set('guide',{});go()}
-if(t.id=='geo')navigator.geolocation?.getCurrentPosition(p=>{$('#l').value=p.coords.latitude.toFixed(5)+', '+p.coords.longitude.toFixed(5)},()=>alert('Position indisponible : saisissez le lieu à la main.'))});
-document.addEventListener('submit',async e=>{e.preventDefault();if($('#hp').value)return;const m=await J('mairie');let s,b;
-if(e.target.id=='fc'){s=$('#s').value;b=$('#m').value+'\n\n'+$('#n').value+' — '+$('#e').value}
-else{const no='SIG-'+new Date().getFullYear()+'-'+String(Math.floor(Math.random()*900)+100);s=no+' – '+$('#t').value;b='Lieu : '+$('#l').value+'\n\n'+$('#d').value;$('#ok').textContent='Votre numéro de suivi : '+no}
-if(e.target.id=='fc')$('#ok').textContent='Votre messagerie va s’ouvrir : merci de valider l’envoi.';
-location.href='mailto:'+m.email+'?subject='+encodeURIComponent(s)+'&body='+encodeURIComponent(b)});
-/* Accessibilité */
-const P=st.get('a11y',{s:0});
-function applyA(){document.documentElement.className='s'+P.s;['contrast','cb','dark','lines','big'].forEach(o=>document.body.classList.toggle(o,!!P[o]));document.documentElement.classList.toggle('dark',!!P.dark);document.documentElement.classList.toggle('contrast',!!P.contrast);document.documentElement.classList.toggle('cb',!!P.cb);document.querySelectorAll('[data-o]').forEach(c=>c.checked=!!P[c.dataset.o])}
-applyA();
-$('#abtn').onclick=()=>{const h=$('#a11y').hidden;$('#a11y').hidden=!h;$('#abtn').setAttribute('aria-expanded',h)};
-$('#a11y').addEventListener('click',e=>{if(e.target.dataset.s!=null){P.s=+e.target.dataset.s;st.set('a11y',P);applyA()}});
-$('#a11y').addEventListener('change',e=>{if(e.target.dataset.o){P[e.target.dataset.o]=e.target.checked;st.set('a11y',P);applyA()}});
-$('#tts').onclick=()=>{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance($('#main').innerText);u.lang='fr-FR';speechSynthesis.speak(u)};
-/* PWA */
-let ip;addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;$('#install').hidden=false});
-$('#install').onclick=async()=>{ip.prompt();await ip.userChoice;$('#install').hidden=true};
-if('serviceWorker'in navigator)navigator.serviceWorker.register('/service-worker.js');
+if(t.dataset.e){const x=ELUS[t.dataset.e];$('#dlg').innerHTML=`<h3
