@@ -73,5 +73,5 @@ $('#a11y').addEventListener('click',e=>{if(e.target.dataset.s!=null){P.s=+e.targ
 $('#a11y').addEventListener('change',e=>{if(e.target.dataset.o){P[e.target.dataset.o]=e.target.checked;st.set('a11y',P);applyA()}});
 $('#tts').onclick=()=>{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance($('#main').innerText);u.lang='fr-FR';speechSynthesis.speak(u)};
 let ip;addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;$('#install').hidden=false});
-$('#install').onclick=async()=>{ip.prompt();await ip.userChoice;$('#install').hidden=true};
+$('#install').onclick=async()=>{if(!ip){alert('Pour installer : menu du navigateur, puis « Ajouter à l’écran d’accueil ». Sur iPhone : bouton Partager, puis « Sur l’écran d’accueil ».');return}ip.prompt();await ip.userChoice;ip=null;$('#install').hidden=true};
 if('serviceWorker'in navigator)navigator.serviceWorker.register('/service-worker.js');
