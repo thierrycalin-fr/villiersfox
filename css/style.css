@@ -53,3 +53,4 @@ main:focus{outline:none}
 .accent{border-left:6px solid var(--p)}
 .card{transition:transform .15s}.card:hover{transform:translateY(-2px)}
 @media(prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}
+[hidden]{display:none!important}
