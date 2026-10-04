@@ -54,3 +54,5 @@ main:focus{outline:none}
 .card{transition:transform .15s}.card:hover{transform:translateY(-2px)}
 @media(prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}
 [hidden]{display:none!important}
+header{background:linear-gradient(90deg,rgba(20,50,38,.82),rgba(20,50,38,.25)),url(../img/hero.webp) center/cover no-repeat,#1f4d3a}
+header h1,.hero p{text-shadow:0 1px 6px rgba(0,0,0,.55)}
